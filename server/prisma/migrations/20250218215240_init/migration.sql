@@ -31,6 +31,15 @@ CREATE TABLE "UserBook" (
     CONSTRAINT "UserBook_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "customTag" (
+    "id" SERIAL NOT NULL,
+    "tagName" TEXT NOT NULL,
+    "userBookId" INTEGER,
+
+    CONSTRAINT "customTag_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
@@ -42,3 +51,6 @@ ALTER TABLE "UserBook" ADD CONSTRAINT "UserBook_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "UserBook" ADD CONSTRAINT "UserBook_bookId_fkey" FOREIGN KEY ("bookId") REFERENCES "Book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "customTag" ADD CONSTRAINT "customTag_userBookId_fkey" FOREIGN KEY ("userBookId") REFERENCES "UserBook"("id") ON DELETE SET NULL ON UPDATE CASCADE;
