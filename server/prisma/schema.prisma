@@ -43,7 +43,7 @@ model UserBook {
   book Book @relation(fields: [bookId], references: [id])
 }
 
-model customTags {
+model customTag {
   id           Int       @id @default(autoincrement())
   tagName      String
 }
