@@ -22,31 +22,29 @@ model User {
 }
 
 model Book {
-  id          Int        @id @default(autoincrement())
-  title       String
-  author      String
-  genre       String?
-  readingTime Int?
-  tags        String[]   @default([])
-  userBooks   UserBook[]
+  id           Int       @id @default(autoincrement())
+  title        String
+  author       String
+  genre        String?
+  // add a relation to Tag:
+  tags         Tag[] 
+  userBooks    UserBook[]
+}
+
+model Tag {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  // Implicit many-to-many relation back to Book:
+  books Book[] 
 }
 
 model UserBook {
-  id         Int         @id @default(autoincrement())
-  userId     Int
-  bookId     Int
-  priority   Int // Calculated priority field
-  status     String // e.g., "to-read", "reading", "completed"
-  customTags customTag[] // list of custom tag ids
+  id        Int    @id @default(autoincrement())
+  userId    Int
+  bookId    Int
+  priority  Int    // Field to store the user-defined ordering
+  status    String // For example, "to-read", "reading", "completed"
 
   user User @relation(fields: [userId], references: [id])
   book Book @relation(fields: [bookId], references: [id])
-}
-
-model customTag {
-  id         Int       @id @default(autoincrement())
-  tagName    String
-  
-  UserBook   UserBook? @relation(fields: [userBookId], references: [id])
-  userBookId Int?
 }
