@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int        @id @default(autoincrement())
+  username String     @unique
+  email    String     @unique
+  password String
+  books    UserBook[]
+}
+
+model Book {
+  id           Int       @id @default(autoincrement())
+  title        String
+  author       String
+  genre        String?
+  // add a relation to Tag:
+  tags         Tag[] 
+  userBooks    UserBook[]
+}
+
+model Tag {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  // Implicit many-to-many relation back to Book:
+  books Book[] 
+}
+
+model UserBook {
+  id        Int    @id @default(autoincrement())
+  userId    Int
+  bookId    Int
+  priority  Int    // Field to store the user-defined ordering
+  status    String // For example, "to-read", "reading", "completed"
+
+  user User @relation(fields: [userId], references: [id])
+  book Book @relation(fields: [bookId], references: [id])
+}
