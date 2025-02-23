@@ -12,10 +12,20 @@ const GoogleBooksTestPage: React.FC = () => {
       const data = await searchBooks(query);
       setResults(data.items || []);
     } catch (error) {
-      console.error(error);
+      console.error('Search error:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper to extract ISBN-13 from industryIdentifiers, if available.
+  const getISBN13 = (book: GoogleBook): string | undefined => {
+    const identifiers = book.volumeInfo.industryIdentifiers;
+    if (identifiers) {
+      const isbn13 = identifiers.find((id) => id.type === 'ISBN_13');
+      return isbn13 ? isbn13.identifier : undefined;
+    }
+    return undefined;
   };
 
   return (
@@ -32,9 +42,26 @@ const GoogleBooksTestPage: React.FC = () => {
       </button>
       <ul>
         {results.map((book) => (
-          <li key={book.id}>
-            <strong>{book.volumeInfo.title}</strong>
-            {book.volumeInfo.authors && <span> by {book.volumeInfo.authors.join(', ')}</span>}
+          <li key={book.id} style={{ marginBottom: '1rem', borderBottom: '1px solid #ccc', paddingBottom: '1rem' }}>
+            <h3>{book.volumeInfo.title}</h3>
+            {book.volumeInfo.imageLinks?.thumbnail && (
+              <img
+                src={book.volumeInfo.imageLinks.thumbnail}
+                alt={`Cover for ${book.volumeInfo.title}`}
+                style={{ maxWidth: '120px', marginBottom: '8px' }}
+              />
+            )}
+            {book.volumeInfo.authors && <p>by {book.volumeInfo.authors.join(', ')}</p>}
+            {book.volumeInfo.description && (
+              <p>
+                <strong>Description:</strong> {book.volumeInfo.description}
+              </p>
+            )}
+            {getISBN13(book) && (
+              <p>
+                <strong>ISBN-13:</strong> {getISBN13(book)}
+              </p>
+            )}
           </li>
         ))}
       </ul>

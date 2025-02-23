@@ -1,4 +1,3 @@
-// src/components/TBRList.tsx
 import React, { useState } from 'react';
 import {
   DndContext,
@@ -23,6 +22,8 @@ export interface UserBook {
     id: number;
     title: string;
     author: string;
+    isbn: number;
+    summary: string;
   };
 }
 

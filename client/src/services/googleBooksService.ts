@@ -2,16 +2,22 @@ import axios from 'axios';
 
 const GOOGLE_BOOKS_API_BASE = 'https://www.googleapis.com/books/v1/volumes';
 
+export interface IndustryIdentifier {
+  type: string;
+  identifier: string;
+}
+
 export interface GoogleBook {
   id: string;
   volumeInfo: {
     title: string;
     authors?: string[];
     description?: string;
+    industryIdentifiers?: IndustryIdentifier[];
     imageLinks?: {
       thumbnail: string;
     };
-    [key: string]: any;
+    // Additional fields can be added if needed.
   };
 }
 

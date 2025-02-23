@@ -1,4 +1,3 @@
-// src/pages/TBRListPage.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import TBRList, { UserBook } from '../components/TBRList';
