@@ -22,16 +22,18 @@ interface BookCardProps {
 
 const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
   return (
-    <div onClick={onClick} className="cursor-pointer p-4 border border-bookBorder rounded bg-bookBeige hover:shadow-md transition">
-      {book.cover && (
+    <div onClick={onClick} className="cursor-pointer">
+      {book.cover ? (
         <img
           src={book.cover}
           alt={`Cover for ${book.title}`}
-          className="w-32 mb-2"
+          className="w-32 h-auto rounded shadow"
         />
+      ) : (
+        <div className="w-32 h-48 bg-gray-300 flex items-center justify-center rounded shadow">
+          <span className="text-gray-700">No Cover</span>
+        </div>
       )}
-      <h3 className="text-xl font-semibold">{book.title}</h3>
-      <p className="text-bookBrown/80">by {book.author}</p>
     </div>
   );
 };

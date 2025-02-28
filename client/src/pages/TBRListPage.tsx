@@ -32,7 +32,7 @@ const TBRListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-bookTan flex items-center justify-center p-4">
-      <div className="bg-bookBeige text-bookBrown border border-bookBorder shadow-lg rounded-lg p-8 w-full max-w-2xl">
+      <div className="bg-bookBeige text-bookBrown border border-bookBorder shadow-lg rounded-lg p-8 w-full max-w-4xl">
         <h2 className="text-3xl font-bold mb-4 text-center">My TBR List</h2>
         {loading ? (
           <p>Loading...</p>

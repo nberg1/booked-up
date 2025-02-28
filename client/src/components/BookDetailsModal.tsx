@@ -14,7 +14,7 @@ interface BookDetailsModalProps {
 const BookDetailsModal: React.FC<BookDetailsModalProps> = ({ book, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-bookBeige text-bookBrown rounded-lg shadow-xl p-6 relative max-w-lg w-full">
+      <div className="bg-bookBeige text-bookBrown rounded-lg shadow-xl p-6 relative max-w-lg w-full max-h-[80vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -30,10 +30,12 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({ book, onClose }) =>
               className="w-32 mb-4"
             />
           )}
-          <h2 className="text-2xl font-bold mb-2">{book.title}</h2>
-          <p className="text-lg mb-2">by {book.author}</p>
+          <h2 className="text-2xl font-bold mb-2 text-center">{book.title}</h2>
+          <p className="text-lg mb-2 text-center">by {book.author}</p>
           {book.description && (
-            <p className="text-sm text-center">{book.description}</p>
+            <div className="text-sm text-center whitespace-pre-line">
+              {book.description}
+            </div>
           )}
         </div>
       </div>

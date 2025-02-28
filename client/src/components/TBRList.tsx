@@ -71,9 +71,17 @@ const TBRList: React.FC<TBRListProps> = ({ initialBooks, token, onCardClick }) =
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={books.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-        {books.map((item) => (
-          <SortableItem key={item.id} id={item.id} book={item.book} priority={item.priority} onClick={() => onCardClick(item)}/>
-        ))}
+        <div className="flex flex-wrap gap-4 justify-center">
+          {books.map((item) => (
+            <SortableItem
+              key={item.id}
+              id={item.id}
+              book={item.book}
+              priority={item.priority}
+              onClick={() => onCardClick(item)}
+            />
+          ))}
+        </div>
       </SortableContext>
     </DndContext>
   );

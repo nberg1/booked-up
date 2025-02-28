@@ -28,7 +28,7 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, book, priority, onClick
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="sortable-item">
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <BookCard book={book} priority={priority} onClick={onClick} />
     </div>
   );
