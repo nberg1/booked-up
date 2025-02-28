@@ -23,16 +23,18 @@ export interface UserBook {
     title: string;
     author: string;
     isbn: number;
-    summary: string;
+    description: string;
+    cover: string;
   };
 }
 
 interface TBRListProps {
   initialBooks: UserBook[];
   token: string;
+  onCardClick: (book: UserBook) => void;
 }
 
-const TBRList: React.FC<TBRListProps> = ({ initialBooks, token }) => {
+const TBRList: React.FC<TBRListProps> = ({ initialBooks, token, onCardClick }) => {
   const [books, setBooks] = useState<UserBook[]>(initialBooks);
 
   const sensors = useSensors(
@@ -70,7 +72,7 @@ const TBRList: React.FC<TBRListProps> = ({ initialBooks, token }) => {
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={books.map((item) => item.id)} strategy={verticalListSortingStrategy}>
         {books.map((item) => (
-          <SortableItem key={item.id} id={item.id} book={item.book} priority={item.priority} />
+          <SortableItem key={item.id} id={item.id} book={item.book} priority={item.priority} onClick={() => onCardClick(item)}/>
         ))}
       </SortableContext>
     </DndContext>

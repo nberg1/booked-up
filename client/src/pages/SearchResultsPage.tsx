@@ -56,7 +56,8 @@ const SearchResultsPage: React.FC = () => {
         title: book.volumeInfo.title,
         author: book.volumeInfo.authors?.join(', '),
         description: book.volumeInfo.description,
-        isbn: getISBN13(book)
+        isbn: getISBN13(book),
+        cover: book.volumeInfo.imageLinks?.thumbnail
         // Optionally add description, isbn, etc.
       };
 

@@ -67,7 +67,7 @@ export const getBookById = async (req: Request, res: Response): Promise<void> =>
  */
 export const createBook = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, author, description, isbn, tags } = req.body;
+    const { title, author, description, isbn, cover, tags } = req.body;
     const userId = (req as AuthenticatedRequest).user?.id;
     if (!userId) {
       res.status(401).json({ error: 'User not authenticated' });
@@ -84,6 +84,7 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
         author,
         description,
         isbn,
+        cover,
         tags: {
           connectOrCreate: tagList.map((tagName: string) => ({
             where: { name: tagName },
@@ -125,10 +126,10 @@ export const updateBook = async (req: Request, res: Response): Promise<void> => 
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
-    const { title, author, description, isbn, tags, status } = req.body;
+    const { title, author, description, isbn, cover, tags, status } = req.body;
 
     // If book details are provided, update the book record
-    if (title || author || description || isbn || tags) {
+    if (title || author || description || isbn || cover || tags) {
       await prisma.book.update({
         where: { id: bookId },
         data: {
@@ -136,6 +137,7 @@ export const updateBook = async (req: Request, res: Response): Promise<void> => 
           author,
           description,
           isbn,
+          cover,
           tags: tags
             ? {
                 // Update tags using connectOrCreate, similar to creation

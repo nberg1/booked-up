@@ -27,6 +27,7 @@ model Book {
   author       String
   description  String?
   isbn         String?
+  cover        String?
   // add a relation to Tag:
   tags         Tag[] 
   userBooks    UserBook[]

@@ -9,16 +9,18 @@ interface Book {
   isbn: number;
   title: string;
   author: string;
-  summary: string;
+  description: string;
+  cover: string;
 }
 
 interface SortableItemProps {
   id: number; // Unique identifier for dnd-kit (usually the same as the userBook id)
   book: Book;
   priority: number;
+  onClick?: () => void;
 }
 
-const SortableItem: React.FC<SortableItemProps> = ({ id, book, priority }) => {
+const SortableItem: React.FC<SortableItemProps> = ({ id, book, priority, onClick }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -27,7 +29,7 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, book, priority }) => {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="sortable-item">
-      <BookCard book={book} priority={priority} />
+      <BookCard book={book} priority={priority} onClick={onClick} />
     </div>
   );
 };
