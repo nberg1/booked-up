@@ -25,7 +25,8 @@ model Book {
   id           Int       @id @default(autoincrement())
   title        String
   author       String
-  genre        String?
+  description  String?
+  isbn         String?
   // add a relation to Tag:
   tags         Tag[] 
   userBooks    UserBook[]

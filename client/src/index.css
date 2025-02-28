@@ -15,3 +15,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Custom responsive background for the header */
+.responsive-bg {
+  background-image: url('../public/bookshelf_2.png');
+  background-size: contain;
+  background-position: center;
+}
+
+@media (min-width: 768px) {
+  .responsive-bg {
+    background-image: url('../public/bookshelf_3.png');
+    background-size: contain;
+    background-position: center;
+  }
+}

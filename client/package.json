@@ -8,6 +8,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@heroicons/react": "^2.2.0",
     "@mui/material": "^6.4.5",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -55,8 +56,9 @@
     ]
   },
   "devDependencies": {
-    "tailwindcss": "^3.x",
+    "autoprefixer": "^10.x",
     "postcss": "^8.x",
-    "autoprefixer": "^10.x"
-  }
+    "tailwindcss": "^3.x"
+  },
+  "proxy": "http://localhost:5000"
 }
