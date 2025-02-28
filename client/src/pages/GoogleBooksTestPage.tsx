@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { searchBooks, GoogleBook } from '../services/googleBooksService';
 
 const GoogleBooksTestPage: React.FC = () => {
-  const [query, setQuery] = useState<string>('');
+  const [query, setQuery] = useState('');
   const [results, setResults] = useState<GoogleBook[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -18,7 +18,6 @@ const GoogleBooksTestPage: React.FC = () => {
     }
   };
 
-  // Helper to extract ISBN-13 from industryIdentifiers, if available.
   const getISBN13 = (book: GoogleBook): string | undefined => {
     const identifiers = book.volumeInfo.industryIdentifiers;
     if (identifiers) {
@@ -29,29 +28,38 @@ const GoogleBooksTestPage: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Google Books API Test</h2>
-      <input
-        type="text"
-        placeholder="Search for books..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      <button onClick={handleSearch} disabled={loading}>
-        {loading ? 'Searching...' : 'Search'}
-      </button>
-      <ul>
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-4">Google Books API Test</h2>
+      <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="Search for books..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={handleSearch}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        >
+          {loading ? 'Searching...' : 'Search'}
+        </button>
+      </div>
+      <ul className="space-y-4">
         {results.map((book) => (
-          <li key={book.id} style={{ marginBottom: '1rem', borderBottom: '1px solid #ccc', paddingBottom: '1rem' }}>
-            <h3>{book.volumeInfo.title}</h3>
+          <li key={book.id} className="border-b pb-4">
+            <h3 className="text-xl font-semibold">{book.volumeInfo.title}</h3>
+            {book.volumeInfo.authors && (
+              <p className="text-gray-600">by {book.volumeInfo.authors.join(', ')}</p>
+            )}
             {book.volumeInfo.imageLinks?.thumbnail && (
               <img
                 src={book.volumeInfo.imageLinks.thumbnail}
                 alt={`Cover for ${book.volumeInfo.title}`}
-                style={{ maxWidth: '120px', marginBottom: '8px' }}
+                className="w-32 mb-2"
               />
             )}
-            {book.volumeInfo.authors && <p>by {book.volumeInfo.authors.join(', ')}</p>}
             {book.volumeInfo.description && (
               <p>
                 <strong>Description:</strong> {book.volumeInfo.description}
