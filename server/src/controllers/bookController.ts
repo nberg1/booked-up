@@ -67,21 +67,25 @@ export const getBookById = async (req: Request, res: Response): Promise<void> =>
  */
 export const createBook = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, author, genre, tags } = req.body;
+    const { title, author, description, isbn, tags } = req.body;
     const userId = (req as AuthenticatedRequest).user?.id;
     if (!userId) {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
 
+    // Default tags to an empty array if not provided
+    const tagList: string[] = tags ? tags : [];
+
     // Create the book with associated tags (using connectOrCreate)
     const book = await prisma.book.create({
       data: {
         title,
         author,
-        genre,
+        description,
+        isbn,
         tags: {
-          connectOrCreate: tags.map((tagName: string) => ({
+          connectOrCreate: tagList.map((tagName: string) => ({
             where: { name: tagName },
             create: { name: tagName }
           }))
@@ -121,16 +125,17 @@ export const updateBook = async (req: Request, res: Response): Promise<void> => 
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
-    const { title, author, genre, tags, status } = req.body;
+    const { title, author, description, isbn, tags, status } = req.body;
 
     // If book details are provided, update the book record
-    if (title || author || genre || tags) {
+    if (title || author || description || isbn || tags) {
       await prisma.book.update({
         where: { id: bookId },
         data: {
           title,
           author,
-          genre,
+          description,
+          isbn,
           tags: tags
             ? {
                 // Update tags using connectOrCreate, similar to creation
