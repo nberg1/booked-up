@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { setIsLoggedIn } = useAuth();
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -22,9 +24,10 @@ const LoginPage: React.FC = () => {
     setError('');
     try {
       const response = await axios.post('/api/users/login', form);
-      const { token, user } = response.data;
+      const { token } = response.data;
       localStorage.setItem('token', token);
-      navigate('/'); // Redirect to TBR list or dashboard after login
+      setIsLoggedIn(true);
+      navigate('/');
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.response?.data?.error || 'Login failed. Please try again.');
