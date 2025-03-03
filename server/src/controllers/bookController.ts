@@ -74,12 +74,20 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Default tags to an empty array if not provided
-    const tagList: string[] = tags ? tags : [];
+    let book;
 
-    // Create the book with associated tags (using connectOrCreate)
-    const book = await prisma.book.create({
-      data: {
+    // If ISBN is provided, check if the book already exists in the DB
+    if (isbn) {
+      book = await prisma.book.findUnique({
+        where: { isbn: isbn},
+      });
+    }
+
+    // If no book was found, create a new book record
+    if (!book) {
+      const tagList: string[] = tags ? tags : [];
+      book = await prisma.book.create({
+        data: {
         title,
         author,
         description,
@@ -93,7 +101,8 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
         }
       },
       include: { tags: true }
-    });
+      });
+    }
 
     const defaultPriority = await getDefaultPriority(userId);
 

@@ -68,6 +68,20 @@ const TBRList: React.FC<TBRListProps> = ({ initialBooks, token, onCardClick }) =
     }
   };
 
+    // Delete a book from the TBR list
+  const handleDelete = async (userBookId: number) => {
+    try {
+      await axios.delete(`/api/books/${userBookId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Remove the book from the local state
+      setBooks((prevBooks) => prevBooks.filter((book) => book.id !== userBookId));
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      alert('Could not delete this book.');
+    }
+  };
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={books.map((item) => item.id)} strategy={verticalListSortingStrategy}>
@@ -79,6 +93,7 @@ const TBRList: React.FC<TBRListProps> = ({ initialBooks, token, onCardClick }) =
               book={item.book}
               priority={item.priority}
               onClick={() => onCardClick(item)}
+              onDelete={() => handleDelete(item.id)}
             />
           ))}
         </div>

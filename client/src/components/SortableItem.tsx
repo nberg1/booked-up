@@ -18,9 +18,10 @@ interface SortableItemProps {
   book: Book;
   priority: number;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
-const SortableItem: React.FC<SortableItemProps> = ({ id, book, priority, onClick }) => {
+const SortableItem: React.FC<SortableItemProps> = ({ id, book, priority, onClick, onDelete }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -29,7 +30,7 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, book, priority, onClick
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <BookCard book={book} priority={priority} onClick={onClick} />
+      <BookCard book={book} priority={priority} onClick={onClick} onDelete={onDelete} />
     </div>
   );
 };
