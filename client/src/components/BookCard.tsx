@@ -1,19 +1,7 @@
 import React from 'react';
 import '../styles/BookCard.css';
 import { TrashIcon } from '@heroicons/react/24/outline';
-
-interface Book {
-  id: number;
-  isbn: number;
-  title: string;
-  author: string;
-  description: string;
-  cover: string;
-  // additional fields if needed
-  // reviews?
-  // ratings?
-  // spice scale?
-}
+import { Book } from '../types/book';
 
 interface BookCardProps {
   book: Book;

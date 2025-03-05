@@ -1,33 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import BookDetailsModal from '../components/BookDetailsModal';
 import BookList from '../components/BookList';
 import { UserBook } from '../types/book';
 import { BookStatus } from '../enums/status.enum';
+import BookDetailsModal from '../components/BookDetailsModal';
 
-const TBRListPage: React.FC = () => {
+const FinishedBooksPage: React.FC = () => {
   const [books, setBooks] = useState<UserBook[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedBook, setSelectedBook] = useState<UserBook | null>(null);
   const token = localStorage.getItem('token') || '';
 
-  const fetchBooks = async () => {
+  const fetchFinishedBooks = async () => {
     try {
-      // Assume /api/books returns books with status "to-read" or "reading"
-      const res = await axios.get('/api/books', {
+      // Assume /api/books/finished returns books with status "read"
+      const res = await axios.get('/api/books/finished', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBooks(res.data);
     } catch (error) {
-      console.error('Error fetching TBR list:', error);
+      console.error('Error fetching finished books:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchBooks();
+    if (token) {
+      fetchFinishedBooks();
+    }
   }, [token]);
+
+  const handleCardClick = (book: UserBook) => {
+    setSelectedBook(book);
+  };
 
   // Callback when reordering occurs
   const handleReorder = async (updatedBooks: UserBook[]) => {
@@ -47,30 +53,30 @@ const TBRListPage: React.FC = () => {
     }
   };
 
-  const handleCardClick = (book: UserBook) => {
-    setSelectedBook(book);
+
+  const handleStatusChange = (newStatus: BookStatus) => {
+    if (newStatus === BookStatus.READ) {
+      // Remove the book from the TBR list if marked as "read"
+      setBooks((prevBooks) => prevBooks.filter((b) => b.id !== selectedBook?.id));
+    } else if (selectedBook) {
+      // Otherwise, update the book's status
+      setBooks((prevBooks) =>
+        prevBooks.map((b) => (b.id === selectedBook.id ? { ...selectedBook, status: newStatus } : b))
+      );
+    }
+    setSelectedBook(null);
   };
-
-const handleStatusChange = (newStatus: BookStatus) => {
-  if (newStatus === BookStatus.READ) {
-    // Remove the book from the TBR list if marked as "read"
-    setBooks((prevBooks) => prevBooks.filter((b) => b.id !== selectedBook?.id));
-  } else if (selectedBook) {
-    // Otherwise, update the book's status
-    setBooks((prevBooks) =>
-      prevBooks.map((b) => (b.id === selectedBook.id ? { ...selectedBook, status: newStatus } : b))
-    );
-  }
-  setSelectedBook(null);
-};
-
+  
   return (
     <div className="min-h-screen bg-bookTan flex items-center justify-center p-4">
       <div className="bg-bookBeige text-bookBrown border border-bookBorder shadow-lg rounded-lg p-8 w-full max-w-4xl">
-        <h2 className="text-3xl font-bold mb-4 text-center">My TBR List</h2>
+        <h2 className="text-3xl font-bold text-bookBrown mb-4 text-center">Finished Books</h2>
         {loading ? (
-          <p>Loading...</p>
+            <p className="text-bookBrown">Loading...</p>
+        ) : books.length === 0 ? (
+            <p className="text-bookBrown text-center">No finished books found.</p>
         ) : (
+          // Render without drag-and-drop
           <BookList books={books} onCardClick={handleCardClick} draggable onReorder={handleReorder} />
         )}
       </div>
@@ -87,4 +93,4 @@ const handleStatusChange = (newStatus: BookStatus) => {
   );
 };
 
-export default TBRListPage;
+export default FinishedBooksPage;

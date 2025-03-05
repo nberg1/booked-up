@@ -39,11 +39,15 @@ const Header: React.FC = () => {
               </Link>
             </li>
             {isLoggedIn ? (
-              <li>
+              <><li>
+                <Link to="/finished" className="text-bookTan hover:underline">
+                    Finished Book List
+                </Link>
+              </li><li>
                 <button onClick={handleLogout} className="text-bookTan hover:underline">
-                  Logout
+                    Logout
                 </button>
-              </li>
+              </li></>
             ) : (
               <li>
               <Link to="/login" className="text-bookTan hover:underline">
