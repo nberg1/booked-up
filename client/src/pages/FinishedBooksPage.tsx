@@ -54,15 +54,19 @@ const FinishedBooksPage: React.FC = () => {
   };
 
 
+  // When the modal calls onStatusChange, update local state:
+  // If new status is not "read", remove that book from the finished list.
   const handleStatusChange = (newStatus: BookStatus) => {
-    if (newStatus === BookStatus.READ) {
-      // Remove the book from the TBR list if marked as "read"
-      setBooks((prevBooks) => prevBooks.filter((b) => b.id !== selectedBook?.id));
-    } else if (selectedBook) {
-      // Otherwise, update the book's status
-      setBooks((prevBooks) =>
-        prevBooks.map((b) => (b.id === selectedBook.id ? { ...selectedBook, status: newStatus } : b))
-      );
+    if (newStatus !== BookStatus.READ) {
+      setBooks((prevBooks) => prevBooks.filter((b) => b.id !== (selectedBook?.id ?? 0)));
+    } else {
+      // If for some reason it remains "read", update the record
+      if (selectedBook) {
+        const updatedBook = { ...selectedBook, status: newStatus };
+        setBooks((prevBooks) =>
+          prevBooks.map((b) => (b.id === updatedBook.id ? updatedBook : b))
+        );
+      }
     }
     setSelectedBook(null);
   };

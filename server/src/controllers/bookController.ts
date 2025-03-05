@@ -37,7 +37,6 @@ export const getBooks = async (req: Request, res: Response): Promise<void> => {
  * GET /api/books/:id
  * Returns a single book entry for the authenticated user by book ID.
  */
-// TODO: DO WE NEED THIS???
 export const getBookById = async (req: Request, res: Response): Promise<void> => {
   try {
     const bookId = parseInt(req.params.id, 10);
@@ -193,7 +192,6 @@ export const updateBook = async (req: Request, res: Response): Promise<void> => 
  * Expects updated status field in the request body.
  */
 export const updateBookStatus = async (req: Request, res: Response): Promise<void> => {
-  console.log("UPDATE BOOK STATUS");
   try {
     const userBookId = parseInt(req.params.id, 10);
     const { status } = req.body;

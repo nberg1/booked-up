@@ -6,7 +6,8 @@ import {
   updateBook,
   deleteBook,
   updateBookOrder,
-  getFinishedBooks
+  getFinishedBooks,
+  updateBookStatus
 } from '../controllers/bookController';
 import { authenticateToken } from '../middleware/authMiddleware';
 
@@ -18,7 +19,7 @@ router.get('/finished', authenticateToken, getFinishedBooks); // Get all finishe
 router.get('/:id', authenticateToken, getBookById); // Get a single book by its ID
 router.post('/', authenticateToken, createBook); // Add a new book to TBR list
 router.put('/:id', authenticateToken, updateBook); // Update a book's details or priority
-router.put('/status/:id', authenticateToken, updateBook); // Update a user book's status
+router.put('/status/:id', authenticateToken, updateBookStatus); // Update a user book's status
 router.delete('/:id', authenticateToken, deleteBook); // Remove a book from the list
 router.put('/order/update', authenticateToken, updateBookOrder); // Update the priority order of books
 

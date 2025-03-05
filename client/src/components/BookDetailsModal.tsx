@@ -33,7 +33,6 @@ const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log('Update response:', response.data);
       onStatusChange(newStatus);
     } catch (error: any) {
       console.error('Error updating status:', error.response || error);
