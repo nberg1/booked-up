@@ -1,33 +1,23 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import BookCard from './BookCard';
+import BookCard, { BookCardProps } from './BookCard';
 import '../styles/SortableItem.css';
+import { Book } from '../types/book';
 
-interface Book {
-  id: number;
-  isbn: number;
-  title: string;
-  author: string;
-  summary: string;
+interface SortableItemProps extends BookCardProps {
+  id: number; // Unique identifier, e.g. the UserBook id
 }
 
-interface SortableItemProps {
-  id: number; // Unique identifier for dnd-kit (usually the same as the userBook id)
-  book: Book;
-  priority: number;
-}
-
-const SortableItem: React.FC<SortableItemProps> = ({ id, book, priority }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+const SortableItem: React.FC<SortableItemProps> = ({ id, book, onClick, onDelete, priority }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: id.toString() });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
-
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="sortable-item">
-      <BookCard book={book} priority={priority} />
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <BookCard book={book} onClick={onClick} onDelete={onDelete} priority={priority} />
     </div>
   );
 };

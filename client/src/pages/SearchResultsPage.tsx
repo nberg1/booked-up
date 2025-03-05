@@ -8,6 +8,8 @@ const SearchResultsPage: React.FC = () => {
   const query = searchParams.get('query') || '';
   const [results, setResults] = useState<GoogleBook[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [userTBR, setUserTBR] = useState<any[]>([]); // User's TBR list from backend
+
 
   // Retrieve token from localStorage (or from your auth context)
   const token = localStorage.getItem('token') || '';
@@ -28,16 +30,6 @@ const SearchResultsPage: React.FC = () => {
     }
   }, [query]);
 
-    // Helper function to extract ISBN-10
-  const getISBN10 = (book: GoogleBook): string | undefined => {
-    const identifiers = book.volumeInfo.industryIdentifiers;
-    if (identifiers) {
-      const isbn10 = identifiers.find((id) => id.type === 'ISBN_10');
-      return isbn10 ? isbn10.identifier : undefined;
-    }
-    return undefined;
-  };
-
   // Helper function to extract ISBN-13
   const getISBN13 = (book: GoogleBook): string | undefined => {
     const identifiers = book.volumeInfo.industryIdentifiers;
@@ -48,6 +40,24 @@ const SearchResultsPage: React.FC = () => {
     return undefined;
   };
 
+  // Function to fetch the user's TBR list from the backend
+  const fetchUserTBR = async () => {
+    try {
+      const res = await axios.get('/api/books', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUserTBR(res.data);
+    } catch (error) {
+      console.error('Error fetching TBR list:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchUserTBR();
+    }
+  }, [token]);
+
   // Function to add a book to the TBR list using your existing backend
   const handleAddToTBR = async (book: GoogleBook) => {
     try {
@@ -56,21 +66,30 @@ const SearchResultsPage: React.FC = () => {
         title: book.volumeInfo.title,
         author: book.volumeInfo.authors?.join(', '),
         description: book.volumeInfo.description,
-        isbn: getISBN13(book)
+        isbn: getISBN13(book),
+        cover: book.volumeInfo.imageLinks?.thumbnail
         // Optionally add description, isbn, etc.
       };
 
+
       await axios.post('/api/books', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       alert(`"${book.volumeInfo.title}" added to your TBR!`);
+      // Re-fetch the user's TBR list to update the UI
+      await fetchUserTBR();
     } catch (error) {
       console.error('Error adding to TBR:', error);
       alert('Could not add this book to your TBR.');
     }
+  };
+
+// Check if a book is already in the user's TBR list based on ISBN
+  const isBookInTBR = (book: GoogleBook): boolean => {
+    const isbn = getISBN13(book);
+    if (!isbn) return false;
+    return userTBR.some((tbrItem) => tbrItem.book?.isbn === isbn);
   };
 
   return (
@@ -109,22 +128,21 @@ const SearchResultsPage: React.FC = () => {
                   <strong>Description:</strong> {book.volumeInfo.description}
                 </p>
               )}
-              {getISBN10(book) && (
-                <p className="mb-2">
-                  <strong>ISBN-10:</strong> {getISBN10(book)}
-                </p>
+              {isBookInTBR(book) ? (
+                <button
+                  disabled
+                  className="mt-2 px-3 py-1 bg-gray-400 text-white rounded cursor-not-allowed"
+                >
+                  Already in TBR
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleAddToTBR(book)}
+                  className="mt-2 px-3 py-1 bg-bookAccent text-white rounded hover:bg-bookAccentHover transition duration-200"
+                >
+                  Add to TBR
+                </button>
               )}
-              {getISBN13(book) && (
-                <p className="mb-2">
-                  <strong>ISBN-13:</strong> {getISBN13(book)}
-                </p>
-              )}
-              <button
-                onClick={() => handleAddToTBR(book)}
-                className="mt-2 px-3 py-1 bg-bookAccent text-white rounded hover:bg-bookAccentHover transition duration-200"
-              >
-                Add to TBR
-              </button>
             </li>
           ))}
         </ul>

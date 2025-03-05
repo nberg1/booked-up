@@ -23,10 +23,11 @@ model User {
 
 model Book {
   id           Int       @id @default(autoincrement())
+  isbn         String    @unique
   title        String
   author       String
   description  String?
-  isbn         String?
+  cover        String?
   // add a relation to Tag:
   tags         Tag[] 
   userBooks    UserBook[]

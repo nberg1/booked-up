@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../contexts/AuthContext';
 
 const Header: React.FC = () => {
-  const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const { isLoggedIn, setIsLoggedIn } = useAuth();
+  const [query, setQuery] = useState('');
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    navigate('/login');
+  };
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,16 +38,23 @@ const Header: React.FC = () => {
                 Book List
               </Link>
             </li>
-            <li>
+            {isLoggedIn ? (
+              <><li>
+                <Link to="/finished" className="text-bookTan hover:underline">
+                    Finished Book List
+                </Link>
+              </li><li>
+                <button onClick={handleLogout} className="text-bookTan hover:underline">
+                    Logout
+                </button>
+              </li></>
+            ) : (
+              <li>
               <Link to="/login" className="text-bookTan hover:underline">
-                Login
-              </Link>
-            </li>
-            <li>
-              <Link to="/signup" className="text-bookTan hover:underline">
-                Sign Up
-              </Link>
-            </li>
+                  Login
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </div>

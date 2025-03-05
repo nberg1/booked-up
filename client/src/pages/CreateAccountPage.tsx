@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const CreateAccountPage: React.FC = () => {
   const navigate = useNavigate();
+  const { setIsLoggedIn } = useAuth();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -32,10 +34,10 @@ const CreateAccountPage: React.FC = () => {
 
       const response = await axios.post('/api/users/signup', payload);
       // Assume response contains a token and user data
-      const { token, user } = response.data;
+      const { token } = response.data;
       localStorage.setItem('token', token);
-      // Optionally, store user data in context or state management
-      navigate('/'); // Navigate to the TBR List page or another protected route
+      setIsLoggedIn(true);
+      navigate('/');      // Optionally, store user data in context or state management
     } catch (err: any) {
       console.error('Signup error:', err);
       setError(err.response?.data?.error || 'Signup failed. Please try again.');

@@ -37,7 +37,6 @@ export const getBooks = async (req: Request, res: Response): Promise<void> => {
  * GET /api/books/:id
  * Returns a single book entry for the authenticated user by book ID.
  */
-// TODO: DO WE NEED THIS???
 export const getBookById = async (req: Request, res: Response): Promise<void> => {
   try {
     const bookId = parseInt(req.params.id, 10);
@@ -61,29 +60,59 @@ export const getBookById = async (req: Request, res: Response): Promise<void> =>
 };
 
 /**
+ * GET /api/book/finished
+ */
+export const getFinishedBooks = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as AuthenticatedRequest).user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    const userBooks = await prisma.userBook.findMany({
+      where: { userId, status: 'read' },
+      include: { book: true },
+      orderBy: { priority: 'asc' }
+    });
+    res.json(userBooks);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
  * POST /api/books
  * Creates a new book entry and adds it to the user's TBR list with a default ordering.
  * Expects: { title, author, genre, tags: string[] }
  */
 export const createBook = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, author, description, isbn, tags } = req.body;
+    const { title, author, description, isbn, cover, tags } = req.body;
     const userId = (req as AuthenticatedRequest).user?.id;
     if (!userId) {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
 
-    // Default tags to an empty array if not provided
-    const tagList: string[] = tags ? tags : [];
+    let book;
 
-    // Create the book with associated tags (using connectOrCreate)
-    const book = await prisma.book.create({
-      data: {
+    // If ISBN is provided, check if the book already exists in the DB
+    if (isbn) {
+      book = await prisma.book.findUnique({
+        where: { isbn: isbn},
+      });
+    }
+
+    // If no book was found, create a new book record
+    if (!book) {
+      const tagList: string[] = tags ? tags : [];
+      book = await prisma.book.create({
+        data: {
         title,
         author,
         description,
         isbn,
+        cover,
         tags: {
           connectOrCreate: tagList.map((tagName: string) => ({
             where: { name: tagName },
@@ -92,7 +121,8 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
         }
       },
       include: { tags: true }
-    });
+      });
+    }
 
     const defaultPriority = await getDefaultPriority(userId);
 
@@ -114,7 +144,7 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
 
 /**
  * PUT /api/books/:id
- * Updates book details or status for a user's TBR entry.
+ * Updates book details or status for a user's book entry.
  * Expects updated fields in the request body.
  */
 export const updateBook = async (req: Request, res: Response): Promise<void> => {
@@ -125,10 +155,10 @@ export const updateBook = async (req: Request, res: Response): Promise<void> => 
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
-    const { title, author, description, isbn, tags, status } = req.body;
+    const { title, author, description, isbn, cover, tags } = req.body;
 
     // If book details are provided, update the book record
-    if (title || author || description || isbn || tags) {
+    if (title || author || description || isbn || cover || tags) {
       await prisma.book.update({
         where: { id: bookId },
         data: {
@@ -136,6 +166,7 @@ export const updateBook = async (req: Request, res: Response): Promise<void> => 
           author,
           description,
           isbn,
+          cover,
           tags: tags
             ? {
                 // Update tags using connectOrCreate, similar to creation
@@ -149,17 +180,33 @@ export const updateBook = async (req: Request, res: Response): Promise<void> => 
       });
     }
 
-    // Update the join record (UserBook) if status is provided.
-    if (status) {
-      await prisma.userBook.updateMany({
-        where: { userId, bookId },
-        data: { status }
-      });
-    }
-
     res.json({ message: 'Book updated successfully' });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
+  }
+};
+
+/**
+ * PUT /api/books/status/:id
+ * Updates book status for a user's book entry.
+ * Expects updated status field in the request body.
+ */
+export const updateBookStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userBookId = parseInt(req.params.id, 10);
+    const { status } = req.body;
+    if (!['to-read', 'reading', 'read'].includes(status)) {
+      res.status(400).json({ error: 'Invalid status value.' });
+      return;
+    }
+    const updatedUserBook = await prisma.userBook.update({
+      where: { id: userBookId },
+      data: { status },
+    });
+    res.json({ message: 'Book status updated', updatedUserBook });
+  } catch (error: any) {
+    console.error('Error updating status:', error);
+    res.status(500).json({ error: 'Failed to update book status' });
   }
 };
 
