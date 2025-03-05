@@ -51,18 +51,30 @@ const TBRListPage: React.FC = () => {
     setSelectedBook(book);
   };
 
-const handleStatusChange = (newStatus: BookStatus) => {
-  if (newStatus === BookStatus.READ) {
-    // Remove the book from the TBR list if marked as "read"
-    setBooks((prevBooks) => prevBooks.filter((b) => b.id !== selectedBook?.id));
-  } else if (selectedBook) {
-    // Otherwise, update the book's status
-    setBooks((prevBooks) =>
-      prevBooks.map((b) => (b.id === selectedBook.id ? { ...selectedBook, status: newStatus } : b))
-    );
-  }
-  setSelectedBook(null);
-};
+  const handleDelete = async (userBookId: number) => {
+    try {
+      await axios.delete(`/api/books/${userBookId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBooks((prevBooks) => prevBooks.filter((b) => b.id !== userBookId));
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      alert('Could not delete this book.');
+    }
+  };
+
+  const handleStatusChange = (newStatus: BookStatus) => {
+    if (newStatus === BookStatus.READ) {
+      // Remove the book from the TBR list if marked as "read"
+      setBooks((prevBooks) => prevBooks.filter((b) => b.id !== selectedBook?.id));
+    } else if (selectedBook) {
+      // Otherwise, update the book's status
+      setBooks((prevBooks) =>
+        prevBooks.map((b) => (b.id === selectedBook.id ? { ...selectedBook, status: newStatus } : b))
+      );
+    }
+    setSelectedBook(null);
+  };
 
   return (
     <div className="min-h-screen bg-bookTan flex items-center justify-center p-4">
@@ -71,7 +83,7 @@ const handleStatusChange = (newStatus: BookStatus) => {
         {loading ? (
           <p>Loading...</p>
         ) : (
-          <BookList books={books} onCardClick={handleCardClick} draggable onReorder={handleReorder} />
+          <BookList books={books} onCardClick={handleCardClick} draggable onReorder={handleReorder} onDelete={handleDelete} />
         )}
       </div>
       {selectedBook && (

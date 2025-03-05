@@ -19,9 +19,7 @@ interface BookListProps {
   books: UserBook[];
   onCardClick: (book: UserBook) => void;
   onDelete?: (userBookId: number) => void;
-  /** Set draggable to true for pages that support reordering (TBR) */
   draggable?: boolean;
-  /** Optional callback that fires when the order changes */
   onReorder?: (updatedBooks: UserBook[]) => void;
 }
 
@@ -37,6 +35,7 @@ const BookList: React.FC<BookListProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;

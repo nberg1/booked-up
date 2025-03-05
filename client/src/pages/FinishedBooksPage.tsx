@@ -53,6 +53,17 @@ const FinishedBooksPage: React.FC = () => {
     }
   };
 
+    const handleDelete = async (userBookId: number) => {
+    try {
+      await axios.delete(`/api/books/${userBookId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBooks((prevBooks) => prevBooks.filter((b) => b.id !== userBookId));
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      alert('Could not delete this book.');
+    }
+  };
 
   // When the modal calls onStatusChange, update local state:
   // If new status is not "read", remove that book from the finished list.
@@ -81,7 +92,7 @@ const FinishedBooksPage: React.FC = () => {
             <p className="text-bookBrown text-center">No finished books found.</p>
         ) : (
           // Render without drag-and-drop
-          <BookList books={books} onCardClick={handleCardClick} draggable onReorder={handleReorder} />
+          <BookList books={books} onCardClick={handleCardClick} draggable onReorder={handleReorder} onDelete={handleDelete} />
         )}
       </div>
       {selectedBook && (

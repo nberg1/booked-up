@@ -3,7 +3,7 @@ import '../styles/BookCard.css';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { Book } from '../types/book';
 
-interface BookCardProps {
+export interface BookCardProps {
   book: Book;
   priority: number;
   onClick?: () => void;
@@ -27,7 +27,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick, onDelete }) => {
       {onDelete && (
         <button
           onClick={(e) => {
-            e.stopPropagation(); // Prevent modal from opening
+            e.stopPropagation(); // Prevent opening modal when deleting
             onDelete();
           }}
           className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600"
