@@ -9,7 +9,9 @@ const SearchResultsPage: React.FC = () => {
   const [results, setResults] = useState<GoogleBook[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [userTBR, setUserTBR] = useState<any[]>([]); // User's TBR list from backend
-
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const maxResults = 10;
 
   // Retrieve token from localStorage (or from your auth context)
   const token = localStorage.getItem('token') || '';
@@ -52,11 +54,33 @@ const SearchResultsPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (token) {
-      fetchUserTBR();
+  const fetchResults = async (page: number) => {
+    setLoading(true);
+    try {
+      const startIndex = (page - 1) * maxResults;
+      const data = await searchBooks(query, maxResults, startIndex);
+      setResults(data.items || []);
+      setTotalItems(data.totalItems);
+    } catch (error) {
+      console.error('Error searching books:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [token]);
+  };
+
+useEffect(() => {
+    if (query) {
+      setCurrentPage(1);
+      fetchResults(1);
+    }
+  }, [query]);
+
+  // Update page when currentPage changes
+  useEffect(() => {
+    if (query) {
+      fetchResults(currentPage);
+    }
+  }, [currentPage, query]);
 
   // Function to add a book to the TBR list using your existing backend
   const handleAddToTBR = async (book: GoogleBook) => {
@@ -92,60 +116,79 @@ const SearchResultsPage: React.FC = () => {
     return userTBR.some((tbrItem) => tbrItem.book?.isbn === isbn);
   };
 
-  return (
+    // Pagination controls
+  const totalPages = Math.ceil(totalItems / maxResults);
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+return (
     <div className="min-h-screen bg-bookTan p-4">
-      <h2 className="text-2xl font-bold text-bookBrown mb-4">
+      <h2 className="text-3xl font-bold mb-4 text-bookBrown text-center">
         Search Results for "{query}"
       </h2>
       {loading ? (
-        <p className="text-bookBrown">Loading...</p>
+        <p className="text-bookBrown text-center">Loading...</p>
       ) : results.length === 0 ? (
-        <p className="text-bookBrown">No results found.</p>
+        <p className="text-bookBrown text-center">No results found.</p>
       ) : (
-        <ul className="space-y-4">
-          {results.map((book) => (
-            <li
-              key={book.id}
-              className="bg-bookBeige text-bookBrown p-4 rounded border border-bookBorder"
-            >
-              <h3 className="text-xl font-semibold">
-                {book.volumeInfo.title}
-              </h3>
-              {book.volumeInfo.authors && (
-                <p className="text-bookBrown/80">
-                  by {book.volumeInfo.authors.join(', ')}
-                </p>
-              )}
-              {book.volumeInfo.imageLinks?.thumbnail && (
-                <img
-                  src={book.volumeInfo.imageLinks.thumbnail}
-                  alt={`Cover for ${book.volumeInfo.title}`}
-                  className="w-32 mb-2"
-                />
-              )}
-              {book.volumeInfo.description && (
-                <p className="mb-2">
-                  <strong>Description:</strong> {book.volumeInfo.description}
-                </p>
-              )}
-              {isBookInTBR(book) ? (
-                <button
-                  disabled
-                  className="mt-2 px-3 py-1 bg-gray-400 text-white rounded cursor-not-allowed"
-                >
-                  Already in TBR
-                </button>
-              ) : (
+        <>
+          <ul className="space-y-4">
+            {results.map((book) => (
+              <li key={book.id} className="border-b pb-4">
+                <h3 className="text-xl font-semibold text-bookBrown">{book.volumeInfo.title}</h3>
+                {book.volumeInfo.authors && (
+                  <p className="text-bookBrown/80">by {book.volumeInfo.authors.join(', ')}</p>
+                )}
+                {book.volumeInfo.imageLinks?.thumbnail && (
+                  <img
+                    src={book.volumeInfo.imageLinks.thumbnail}
+                    alt={`Cover for ${book.volumeInfo.title}`}
+                    className="w-32 mb-2"
+                  />
+                )}
+                {book.volumeInfo.description && (
+                  <p className="mb-2 text-bookBrown">
+                    <strong>Description:</strong> {book.volumeInfo.description}
+                  </p>
+                )}
+                {getISBN13(book) && (
+                  <p className="mb-2 text-bookBrown">
+                    <strong>ISBN-13:</strong> {getISBN13(book)}
+                  </p>
+                )}
                 <button
                   onClick={() => handleAddToTBR(book)}
                   className="mt-2 px-3 py-1 bg-bookAccent text-white rounded hover:bg-bookAccentHover transition duration-200"
                 >
                   Add to TBR
                 </button>
-              )}
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+          <div className="flex justify-between items-center mt-6">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-bookAccent text-white rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <div className="text-bookBrown">
+              Page {currentPage} of {totalPages}
+            </div>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-bookAccent text-white rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
