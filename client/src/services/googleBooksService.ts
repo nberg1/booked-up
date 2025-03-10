@@ -28,11 +28,16 @@ export interface GoogleBooksResponse {
 
 /**
  * searchBooks
- * @param query - The search query (e.g., book title, author, etc.)
- * @param maxResults - Maximum number of results (default: 10)
+ * @param query - The search query.
+ * @param maxResults - Maximum number of results per page (default 10).
+ * @param startIndex - The index of the first result to return.
  * @returns A promise that resolves to the search results.
  */
-export async function searchBooks(query: string, maxResults = 10): Promise<GoogleBooksResponse> {
+export async function searchBooks(
+  query: string,
+  maxResults = 10,
+  startIndex = 0
+): Promise<GoogleBooksResponse> {
   const apiKey = process.env.REACT_APP_GOOGLE_BOOKS_API_KEY;
   try {
     const response = await axios.get(GOOGLE_BOOKS_API_BASE, {
@@ -40,6 +45,7 @@ export async function searchBooks(query: string, maxResults = 10): Promise<Googl
         q: query,
         key: apiKey,
         maxResults,
+        startIndex,
       },
     });
     return response.data;
