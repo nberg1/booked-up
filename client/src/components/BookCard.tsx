@@ -17,7 +17,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick, onDelete }) => {
         <img
           src={book.cover}
           alt={`Cover for ${book.title}`}
-          className="w-32 h-auto rounded shadow"
+          className="w-32 h-48 object-cover rounded shadow"
         />
       ) : (
         <div className="w-32 h-48 bg-gray-300 flex items-center justify-center rounded shadow">

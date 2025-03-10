@@ -68,7 +68,13 @@ const SearchResultsPage: React.FC = () => {
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
+    if (token) {
+      fetchUserTBR();
+    }
+  }, [token]);
+
+  useEffect(() => {
     if (query) {
       setCurrentPage(1);
       fetchResults(1);
@@ -116,16 +122,16 @@ useEffect(() => {
     return userTBR.some((tbrItem) => tbrItem.book?.isbn === isbn);
   };
 
-    // Pagination controls
+  // Pagination handlers
   const totalPages = Math.ceil(totalItems / maxResults);
   const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
   const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
-return (
+  return (
     <div className="min-h-screen bg-bookTan p-4">
       <h2 className="text-3xl font-bold mb-4 text-bookBrown text-center">
         Search Results for "{query}"
@@ -145,9 +151,9 @@ return (
                 )}
                 {book.volumeInfo.imageLinks?.thumbnail && (
                   <img
-                    src={book.volumeInfo.imageLinks.thumbnail}
+                    src={book.volumeInfo.imageLinks?.thumbnail}
                     alt={`Cover for ${book.volumeInfo.title}`}
-                    className="w-32 mb-2"
+                    className="w-32 h-48 mb-2"
                   />
                 )}
                 {book.volumeInfo.description && (
@@ -155,17 +161,21 @@ return (
                     <strong>Description:</strong> {book.volumeInfo.description}
                   </p>
                 )}
-                {getISBN13(book) && (
-                  <p className="mb-2 text-bookBrown">
-                    <strong>ISBN-13:</strong> {getISBN13(book)}
-                  </p>
+                {isBookInTBR(book) ? (
+                  <button
+                    disabled
+                    className="mt-2 px-3 py-1 bg-gray-400 text-white rounded cursor-not-allowed"
+                  >
+                    Already in TBR
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleAddToTBR(book)}
+                    className="mt-2 px-3 py-1 bg-bookAccent text-white rounded hover:bg-bookAccentHover transition duration-200"
+                  >
+                    Add to TBR
+                  </button>
                 )}
-                <button
-                  onClick={() => handleAddToTBR(book)}
-                  className="mt-2 px-3 py-1 bg-bookAccent text-white rounded hover:bg-bookAccentHover transition duration-200"
-                >
-                  Add to TBR
-                </button>
               </li>
             ))}
           </ul>
