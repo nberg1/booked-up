@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from './routes/users';
 import bookRoutes from './routes/books';
+import chatgptRoute from './routes/chatgpt';
 
 
 dotenv.config();
@@ -14,6 +15,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/users', userRoutes);
 app.use('/api/books', bookRoutes);
+app.use('/api/chatgpt', chatgptRoute);
+
 
 // Simple test route
 app.get('/', (req: Request, res: Response) => {
