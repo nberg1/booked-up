@@ -6,28 +6,43 @@ interface TagGenerationModalProps {
   bookTitle: string;
   bookAuthor: string;
   bookDescription?: string;
-  onSave: (selectedTags: string[]) => void;
+  initialTags?: string[];
+  onSave: (allTags: string[], selectedTags: string[]) => void;
   onClose: () => void;
 }
 
-const TagGenerationModal: React.FC<TagGenerationModalProps> = ({ bookTitle, bookAuthor, bookDescription, onSave, onClose }) => {
+const TagGenerationModal: React.FC<TagGenerationModalProps> = ({
+  bookTitle,
+  bookAuthor,
+  bookDescription,
+  initialTags = [],
+  onSave,
+  onClose,
+}) => {
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(initialTags));
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    // If there are already initial tags, use them and do not re-fetch
+    if (initialTags && initialTags.length > 0) {
+      setSuggestedTags(initialTags);
+      setSelectedTags(new Set(initialTags));
+      return; // Skip API call
+    }
     const fetchTags = async () => {
       setLoading(true);
       try {
-        // Call your backend endpoint that integrates with ChatGPT.
-        // This endpoint should accept bookTitle and bookAuthor and optionally bookDescription and return suggested tags.
         const res = await axios.post('/api/chatgpt/generate-tags', {
           title: bookTitle,
           author: bookAuthor,
           description: bookDescription,
         });
         const tags: string[] = res.data.tags;
+        console.log("INITIAL GENERATED TAGS: ", tags);
+        // Merge suggested tags with initial tags (without duplicates)
         setSuggestedTags(tags);
+        setSelectedTags(new Set(tags));
       } catch (error) {
         console.error('Error generating tags:', error);
       } finally {
@@ -35,10 +50,10 @@ const TagGenerationModal: React.FC<TagGenerationModalProps> = ({ bookTitle, book
       }
     };
     fetchTags();
-  }, [bookTitle, bookDescription]);
+  }, [bookTitle, bookAuthor, bookDescription]);
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => {
+    setSelectedTags((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(tag)) {
         newSet.delete(tag);
@@ -50,7 +65,7 @@ const TagGenerationModal: React.FC<TagGenerationModalProps> = ({ bookTitle, book
   };
 
   const handleSave = () => {
-    onSave(Array.from(selectedTags));
+    onSave(suggestedTags, Array.from(selectedTags));
   };
 
   return (

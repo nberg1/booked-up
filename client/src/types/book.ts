@@ -18,4 +18,5 @@ export interface UserBook {
   priority: number;
   status: BookStatus;
   book: Book;
+  userTags: string[];
 }

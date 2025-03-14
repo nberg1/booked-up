@@ -97,7 +97,7 @@ const SearchResultsPage: React.FC = () => {
   };
 
   // Once tags are saved, call the backend to add the book with the selected tags
-  const handleSaveTags = async (selectedTags: string[]) => {
+  const handleSaveTags = async (allTags: string[], userTags: string[]) => {
     if (!selectedBookForTags) return;
     try {
       const isbn = getISBN13(selectedBookForTags);
@@ -107,7 +107,8 @@ const SearchResultsPage: React.FC = () => {
         isbn, // used for duplicate checking on backend,
         description: selectedBookForTags.volumeInfo.description,
         cover: selectedBookForTags.volumeInfo.imageLinks?.thumbnail,
-        tags: selectedTags, // now include the selected tags
+        globalTags: allTags,  // Save all generated (global) tags
+        userTags: userTags   // Save the tags the user actively selected
       };
 
       await axios.post('/api/books', payload, {
