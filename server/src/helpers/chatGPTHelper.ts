@@ -13,7 +13,6 @@ const openai = new OpenAI({
  */
 export const generateTagsForBook = async (title: string, author: string, description?: string | null): Promise<string[]> => {
     // Compose a prompt for ChatGPT
-    console.log("GENERATING TAGS FOR BOOK");
     let prompt = `Generate 10 custom tags (one to two word) for the book "${title}" by ${author} that readers would like to filter their book searches by. Here's the book's summary you can use: ${description}`;
     prompt += " Return the tags as a comma-separated list.";
     try {
@@ -34,7 +33,6 @@ export const generateTagsForBook = async (title: string, author: string, descrip
         const tags = text.split(',')
         .map((tag: string) => tag.trim())
         .filter((tag: string) => tag.length > 0);
-        console.log("GENERATED TAGS: ", tags);
         return tags;
     } catch (error) {
         console.error("Error generating tags:", error);

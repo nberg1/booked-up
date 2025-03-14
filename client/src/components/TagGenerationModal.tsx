@@ -27,7 +27,7 @@ const TagGenerationModal: React.FC<TagGenerationModalProps> = ({
     // If there are already initial tags, use them and do not re-fetch
     if (initialTags && initialTags.length > 0) {
       setSuggestedTags(initialTags);
-      setSelectedTags(new Set(initialTags));
+      setSelectedTags(new Set()); // Start with no tags selected
       return; // Skip API call
     }
     const fetchTags = async () => {
@@ -39,10 +39,9 @@ const TagGenerationModal: React.FC<TagGenerationModalProps> = ({
           description: bookDescription,
         });
         const tags: string[] = res.data.tags;
-        console.log("INITIAL GENERATED TAGS: ", tags);
         // Merge suggested tags with initial tags (without duplicates)
         setSuggestedTags(tags);
-        setSelectedTags(new Set(tags));
+        setSelectedTags(new Set()); // Do not auto-select any tags
       } catch (error) {
         console.error('Error generating tags:', error);
       } finally {

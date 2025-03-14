@@ -239,7 +239,6 @@ export const updateBook = async (req: Request, res: Response): Promise<void> => 
  * Update the user-specific tags on a UserBook record.
  */
 export const updateUserBookTags = async (req: Request, res: Response): Promise<void> => {
-  console.log("UPDATE USER BOOK TAGS");
   try {
     const userId = (req as AuthenticatedRequest).user?.id;
     if (!userId) {
