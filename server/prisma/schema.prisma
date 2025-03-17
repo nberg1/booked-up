@@ -28,16 +28,18 @@ model Book {
   author       String
   description  String?
   cover        String?
-  // add a relation to Tag:
-  tags         Tag[] 
+  // Global tags for the book
+  tags         Tag[]     @relation("BookTags")
   userBooks    UserBook[]
 }
 
 model Tag {
   id    Int     @id @default(autoincrement())
   name  String  @unique
-  // Implicit many-to-many relation back to Book:
-  books Book[] 
+  // This relation is for the global book tags
+  books     Book[]     @relation("BookTags")
+  // This relation is for user-specific tags
+  userBooks UserBook[] @relation("UserBookTags")
 }
 
 model UserBook {
@@ -46,7 +48,9 @@ model UserBook {
   bookId    Int
   priority  Int    // Field to store the user-defined ordering
   status    String // For example, "to-read", "reading", "completed"
-
+  // User-specific tags for this entry
+  userTags  Tag[]  @relation("UserBookTags")
+  
   user User @relation(fields: [userId], references: [id])
   book Book @relation(fields: [bookId], references: [id])
 }

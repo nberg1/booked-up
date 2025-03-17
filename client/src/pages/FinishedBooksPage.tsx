@@ -100,8 +100,17 @@ const FinishedBooksPage: React.FC = () => {
           book={selectedBook.book}
           userBookId={selectedBook.id}
           currentStatus={selectedBook.status}
+          currentTags={selectedBook.userTags}
           onStatusChange={handleStatusChange}
           onClose={() => setSelectedBook(null)}
+          onTagsChange={(newTags) => {
+            // Update the corresponding userBook in state with new tags.
+            setBooks((prevBooks) =>
+              prevBooks.map((b) =>
+                b.id === selectedBook.id ? { ...b, userTags: newTags } : b
+              )
+            );
+          }}
         />
       )}
     </div>

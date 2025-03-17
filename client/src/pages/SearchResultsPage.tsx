@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { searchBooks, GoogleBook } from '../services/googleBooksService';
+import TagGenerationModal from '../components/TagGenerationModal';
 
 const SearchResultsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -11,26 +12,12 @@ const SearchResultsPage: React.FC = () => {
   const [userTBR, setUserTBR] = useState<any[]>([]); // User's TBR list from backend
   const [totalItems, setTotalItems] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [showTagModal, setShowTagModal] = useState<boolean>(false);
+  const [selectedBookForTags, setSelectedBookForTags] = useState<GoogleBook | null>(null);
   const maxResults = 10;
 
   // Retrieve token from localStorage (or from your auth context)
   const token = localStorage.getItem('token') || '';
-
-  useEffect(() => {
-    if (query) {
-      setLoading(true);
-      searchBooks(query)
-        .then((data) => {
-          setResults(data.items || []);
-        })
-        .catch((error) => {
-          console.error('Error searching books:', error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [query]);
 
   // Helper function to extract ISBN-13
   const getISBN13 = (book: GoogleBook): string | undefined => {
@@ -69,6 +56,22 @@ const SearchResultsPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (query) {
+      setLoading(true);
+      searchBooks(query)
+        .then((data) => {
+          setResults(data.items || []);
+        })
+        .catch((error) => {
+          console.error('Error searching books:', error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [query]);
+
+  useEffect(() => {
     if (token) {
       fetchUserTBR();
     }
@@ -88,30 +91,38 @@ const SearchResultsPage: React.FC = () => {
     }
   }, [currentPage, query]);
 
-  // Function to add a book to the TBR list using your existing backend
-  const handleAddToTBR = async (book: GoogleBook) => {
-    try {
-      // Adjust payload to match what your createBook controller expects
-      const payload = {
-        title: book.volumeInfo.title,
-        author: book.volumeInfo.authors?.join(', '),
-        description: book.volumeInfo.description,
-        isbn: getISBN13(book),
-        cover: book.volumeInfo.imageLinks?.thumbnail
-        // Optionally add description, isbn, etc.
-      };
+  const handleAddToTBR = (book: GoogleBook) => {
+    setSelectedBookForTags(book);
+    setShowTagModal(true);
+  };
 
+  // Once tags are saved, call the backend to add the book with the selected tags
+  const handleSaveTags = async (allTags: string[], userTags: string[]) => {
+    if (!selectedBookForTags) return;
+    try {
+      const isbn = getISBN13(selectedBookForTags);
+      const payload = {
+        title: selectedBookForTags.volumeInfo.title,
+        author: selectedBookForTags.volumeInfo.authors?.join(', '),
+        isbn, // used for duplicate checking on backend,
+        description: selectedBookForTags.volumeInfo.description,
+        cover: selectedBookForTags.volumeInfo.imageLinks?.thumbnail,
+        globalTags: allTags,  // Save all generated (global) tags
+        userTags: userTags   // Save the tags the user actively selected
+      };
 
       await axios.post('/api/books', payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      alert(`"${book.volumeInfo.title}" added to your TBR!`);
-      // Re-fetch the user's TBR list to update the UI
+      alert(`"${selectedBookForTags.volumeInfo.title}" added to your TBR!`);
       await fetchUserTBR();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding to TBR:', error);
       alert('Could not add this book to your TBR.');
+    } finally {
+      setShowTagModal(false);
+      setSelectedBookForTags(null);
     }
   };
 
@@ -198,6 +209,18 @@ const SearchResultsPage: React.FC = () => {
               Next
             </button>
           </div>
+          {showTagModal && selectedBookForTags && (
+            <TagGenerationModal
+              bookTitle={selectedBookForTags.volumeInfo.title}
+              bookAuthor={selectedBookForTags.volumeInfo.authors?.join(', ') || ""}
+              bookDescription={selectedBookForTags.volumeInfo.description}
+              onSave={handleSaveTags}
+              onClose={() => {
+                setShowTagModal(false);
+                setSelectedBookForTags(null);
+              }}
+            />
+          )}
         </>
       )}
     </div>

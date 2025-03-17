@@ -7,7 +7,8 @@ import {
   deleteBook,
   updateBookOrder,
   getFinishedBooks,
-  updateBookStatus
+  updateBookStatus,
+  updateUserBookTags
 } from '../controllers/bookController';
 import { authenticateToken } from '../middleware/authMiddleware';
 
@@ -22,5 +23,7 @@ router.put('/:id', authenticateToken, updateBook); // Update a book's details or
 router.put('/status/:id', authenticateToken, updateBookStatus); // Update a user book's status
 router.delete('/:id', authenticateToken, deleteBook); // Remove a book from the list
 router.put('/order/update', authenticateToken, updateBookOrder); // Update the priority order of books
+router.put('/:id/tags', authenticateToken, updateUserBookTags); // Update tags that the user chooses for a book
+
 
 export default router;

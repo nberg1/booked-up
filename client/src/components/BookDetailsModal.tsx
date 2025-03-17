@@ -3,11 +3,14 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import { Book } from '../types/book';
 import { BookStatus } from '../enums/status.enum';
+import TagGenerationModal from './TagGenerationModal';
 
 interface BookDetailsModalProps {
   book: Book;
   userBookId: number; // The unique ID of the user's TBR entry (UserBook)
   currentStatus: BookStatus; // e.g. "to-read", "reading", "read"
+  currentTags?: string[];
+  onTagsChange?: (newTags: string[]) => void;
   onStatusChange: (newStatus: BookStatus) => void;
   onClose: () => void;  
 }
@@ -16,11 +19,14 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
   book,
   userBookId,
   currentStatus,
+  currentTags = [],
+  onTagsChange,
   onStatusChange,
   onClose,
 }) => {
   const [loading, setLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<BookStatus>(currentStatus);
+  const [showEditTags, setShowEditTags] = useState(false);
 
 const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value as BookStatus;
@@ -67,21 +73,54 @@ const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
               {book.description}
             </div>
           )}
-          <div className="flex flex-col items-center">
-            <label className="mb-2 font-medium">Status:</label>
+          <label className="mb-2 font-medium">Status:</label>
+
+          <div className="flex flex-row items-center">
             <select
-              value={selectedStatus}
-              onChange={handleStatusChange}
-              disabled={loading}
-              className="px-3 py-2 border border-bookBorder rounded focus:outline-none focus:ring-2 focus:ring-bookAccent"
-            >
+                value={selectedStatus}
+                onChange={handleStatusChange}
+                disabled={loading}
+                className="px-3 py-2 border border-bookBorder rounded focus:outline-none focus:ring-2 focus:ring-bookAccent"
+              >
               <option value={BookStatus.TO_READ}>To Read</option>
               <option value={BookStatus.READING}>Reading</option>
               <option value={BookStatus.READ}>Read</option>
             </select>
+            <button
+              onClick={() => setShowEditTags(true)}
+              className="px-4 py-2 bg-bookAccent text-white rounded hover:bg-bookAccentHover transition"
+            >
+              Edit Tags
+            </button>
           </div>
         </div>
       </div>
+      {showEditTags && (
+        <TagGenerationModal
+          bookTitle={book.title}
+          bookAuthor={book.author}
+          bookDescription={book.description}
+          initialTags={currentTags}
+          onSave={async (newTags) => {
+            try {
+              const token = localStorage.getItem('token');
+              await axios.put(
+                `/api/books/${userBookId}/tags`,
+                { tags: newTags },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              if (onTagsChange) {
+                onTagsChange(newTags);
+              }
+            } catch (error) {
+              console.error('Error updating tags:', error);
+              alert('Could not update tags. Please try again.');
+            }
+            setShowEditTags(false);
+          }}
+          onClose={() => setShowEditTags(false)}
+        />
+      )}
     </div>
   );
 };

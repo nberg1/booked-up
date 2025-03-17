@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getDefaultPriority } from '../services/prioritizationService';
+import { generateTagsForBook } from '../helpers/chatGPTHelper';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -87,7 +88,11 @@ export const getFinishedBooks = async (req: Request, res: Response): Promise<voi
  */
 export const createBook = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, author, description, isbn, cover, tags } = req.body;
+    // Extract details from the request payload.
+    // Expecting: title, author, isbn, description, cover,
+    //            globalTags (complete list of generated tags),
+    //            userTags (tags selected by the user).
+    const { title, author, isbn, description, cover, globalTags, userTags } = req.body;
     const userId = (req as AuthenticatedRequest).user?.id;
     if (!userId) {
       res.status(401).json({ error: 'User not authenticated' });
@@ -99,45 +104,88 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
     // If ISBN is provided, check if the book already exists in the DB
     if (isbn) {
       book = await prisma.book.findUnique({
-        where: { isbn: isbn},
+        where: { isbn: isbn },
+        include: { tags: true },
       });
     }
 
-    // If no book was found, create a new book record
     if (!book) {
-      const tagList: string[] = tags ? tags : [];
+      // If the book does not exist, upsert the global tags.
+      const tagConnections = globalTags && globalTags.length > 0
+        ? await Promise.all(
+            globalTags.map(async (tagName: string) => {
+              return await prisma.tag.upsert({
+                where: { name: tagName },
+                update: {}, // No update needed if the tag exists
+                create: { name: tagName },
+              });
+            })
+          )
+        : [];
+
+      // Create the book and connect the global tags.
       book = await prisma.book.create({
         data: {
-        title,
-        author,
-        description,
-        isbn,
-        cover,
-        tags: {
-          connectOrCreate: tagList.map((tagName: string) => ({
-            where: { name: tagName },
-            create: { name: tagName }
-          }))
-        }
-      },
-      include: { tags: true }
+          isbn,
+          title,
+          author,
+          description,
+          cover,
+          tags: {
+            connect: tagConnections.map((tag) => ({ id: tag.id })),
+          },
+        },
       });
+    } else {
+      // If the book exists but doesn't have any global tags, and we received globalTags,
+      // update the book to add them.
+      if ((!book.tags || book.tags.length === 0) && globalTags && globalTags.length > 0) {
+        const tagConnections = await Promise.all(
+          globalTags.map(async (tagName: string) => {
+            return await prisma.tag.upsert({
+              where: { name: tagName },
+              update: {},
+              create: { name: tagName },
+            });
+          })
+        );
+        await prisma.book.update({
+          where: { id: book.id },
+          data: {
+            tags: {
+              connect: tagConnections.map((tag) => ({ id: tag.id })),
+            },
+          },
+        });
+      }
     }
 
     const defaultPriority = await getDefaultPriority(userId);
 
-    // Link the book to the user in the UserBook join table
+    // Create the UserBook record to link the current user with the book.
+    // For user-specific tags, we assume you have a relation (e.g., "userTags")
+    // that stores these selections. We use connectOrCreate to ensure the tag exists.
     const userBook = await prisma.userBook.create({
       data: {
         userId,
         bookId: book.id,
         priority: defaultPriority,
-        status: 'to-read'
-      }
+        status: 'to-read',
+        userTags: {
+          connectOrCreate: userTags.map((tagName: string) => ({
+            where: { name: tagName },
+            create: { name: tagName },
+        })),
+    },
+      },
+      include: {
+        userTags: true,
+      },
     });
 
     res.status(201).json({ book, userBook });
   } catch (error: any) {
+    console.error('Error creating book:', error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -181,6 +229,37 @@ export const updateBook = async (req: Request, res: Response): Promise<void> => 
     }
 
     res.json({ message: 'Book updated successfully' });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+/**
+ * PUT /api/books/:id/tags
+ * Update the user-specific tags on a UserBook record.
+ */
+export const updateUserBookTags = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as AuthenticatedRequest).user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    const userBookId = parseInt(req.params.id, 10);
+    const { tags } = req.body; // expecting tags as a string[]
+    const updated = await prisma.userBook.update({
+      where: { id: userBookId },
+      data: {
+        userTags: {
+          // Clear current tags and then add new ones.
+          set: [],
+          connectOrCreate: tags.map((tag: string) => ({
+            where: { name: tag },
+            create: { name: tag },
+          })),
+        },
+      },    });
+    res.json({ message: 'Tags updated', updatedUserBook: updated });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
