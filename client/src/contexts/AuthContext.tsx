@@ -1,17 +1,45 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import axios from 'axios';
 
 interface AuthContextProps {
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => void;
+  isAuthLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize from localStorage
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => !!localStorage.getItem('token'));
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
 
-  // Optionally, listen for changes in localStorage
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await axios.get('/api/users/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          // If valid, set the auth state accordingly.
+          if (response.data && response.data.id) {
+            setIsLoggedIn(true);
+          } else {
+            setIsLoggedIn(false);
+            localStorage.removeItem('token');
+          }
+        } catch (error) {
+          setIsLoggedIn(false);
+          localStorage.removeItem('token');
+        }
+      }
+      setIsAuthLoading(false);
+    };
+
+    verifyToken();
+  }, []);
+
+  // Listen for localStorage changes, if needed.
   useEffect(() => {
     const handleStorageChange = () => {
       setIsLoggedIn(!!localStorage.getItem('token'));
@@ -21,7 +49,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
+    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, isAuthLoading }}>
       {children}
     </AuthContext.Provider>
   );
