@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, setIsLoggedIn } = useAuth();
+  const { isLoggedIn, setIsLoggedIn, isAuthLoading } = useAuth();
   const [query, setQuery] = useState('');
 
   const handleLogout = () => {
@@ -21,6 +21,11 @@ const Header: React.FC = () => {
       setQuery('');
     }
   };
+
+  if (isAuthLoading) {
+    // Optionally show a loading indicator while auth is being verified.
+    return <div className="p-4 text-bookBrown">Loading...</div>;
+  }
 
   return (
     <header className="responsive-bg">
