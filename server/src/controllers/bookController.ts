@@ -74,7 +74,10 @@ export const getFinishedBooks = async (req: Request, res: Response): Promise<voi
     }
     const userBooks = await prisma.userBook.findMany({
       where: { userId, status: 'read' },
-      include: { book: true },
+      include: { 
+        book: true,
+        userTags: true, // Directly include the tags 
+      },
       orderBy: { priority: 'asc' }
     });
     res.json(userBooks);

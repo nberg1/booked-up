@@ -26,7 +26,9 @@ const TBRListPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchBooks();
+    if (token) {
+      fetchBooks();
+    }
   }, [token]);
 
   // Callback when reordering occurs
