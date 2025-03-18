@@ -91,15 +91,18 @@ const TBRListPage: React.FC = () => {
           book={selectedBook.book}
           userBookId={selectedBook.id}
           currentStatus={selectedBook.status}
-          currentTags={selectedBook.userTags}
+          currentTags={selectedBook.userTags || []}  // Pass them directly!
           onStatusChange={handleStatusChange}
           onClose={() => setSelectedBook(null)}
-          onTagsChange={(newTags) => {
+          onTagsChange={(newTags: string[]) => {
+            // Update the parent books state with the new tags for the selected book.
             setBooks((prevBooks) =>
-              prevBooks.map((b) =>
-                b.id === selectedBook.id ? { ...b, userTags: newTags } : b
+              prevBooks.map((book) =>
+                book.id === selectedBook.id ? { ...book, userTags: newTags } : book
               )
             );
+            // Also update the local selectedBook state.
+            setSelectedBook({ ...selectedBook, userTags: newTags });
           }}
         />
       )}

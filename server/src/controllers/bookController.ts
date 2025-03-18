@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getDefaultPriority } from '../services/prioritizationService';
-import { generateTagsForBook } from '../helpers/chatGPTHelper';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -25,7 +24,10 @@ export const getBooks = async (req: Request, res: Response): Promise<void> => {
     }
     const userBooks = await prisma.userBook.findMany({
       where: { userId },
-      include: { book: true },
+      include: { 
+        book: true,
+        userTags: true, // Directly include the tags
+      },
       orderBy: { priority: 'asc' }
     });
     res.json(userBooks);
@@ -175,8 +177,8 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
           connectOrCreate: userTags.map((tagName: string) => ({
             where: { name: tagName },
             create: { name: tagName },
-        })),
-    },
+          })),
+        },
       },
       include: {
         userTags: true,
