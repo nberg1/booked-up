@@ -4,6 +4,7 @@ import BookDetailsModal from '../components/BookDetailsModal';
 import BookList from '../components/BookList';
 import { UserBook } from '../types/book';
 import { BookStatus } from '../enums/status.enum';
+import MoreTagsModal from '../components/MoreTagsModal';
 
 const TBRListPage: React.FC = () => {
   const [books, setBooks] = useState<UserBook[]>([]);
@@ -11,7 +12,19 @@ const TBRListPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedBook, setSelectedBook] = useState<UserBook | null>(null);
   const [filterTags, setFilterTags] = useState<string[]>([]);
+  const [showMoreTagsModal, setShowMoreTagsModal] = useState<boolean>(false);
   const token = localStorage.getItem('token') || '';
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640); // Adjust threshold as needed
+    };
+    window.addEventListener('resize', handleResize);
+    // Call once on mount
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchBooks = async () => {
     try {
@@ -52,17 +65,24 @@ const TBRListPage: React.FC = () => {
     }
   }, [filterTags, books]);
 
-  // Compute available tags for filtering from all books.
-  const availableTagsSet = new Set<string>();
+  // Compute available tags and their counts from all books.
+  const tagCountMap = new Map<string, number>();
   books.forEach(book => {
     (book.userTags || []).forEach((ut: any) => {
-      const tagName = typeof ut === 'string'
-        ? ut
-        : (ut.tag?.name || ut.name || '');
-      if (tagName) availableTagsSet.add(tagName);
+      const tagName =
+        typeof ut === 'string'
+          ? ut
+          : (ut.tag?.name || ut.name || '');
+      if (tagName) {
+        tagCountMap.set(tagName, (tagCountMap.get(tagName) || 0) + 1);
+      }
     });
   });
-  const availableTags = Array.from(availableTagsSet);
+  const allAvailableTags = Array.from(tagCountMap.entries()).map(([tag, count]) => ({ tag, count }));
+  // Sort descending by count.
+  allAvailableTags.sort((a, b) => b.count - a.count);
+  const inlineTagCount = isMobile ? 4 : 7;
+  const inlineTags = allAvailableTags.slice(0, inlineTagCount);
 
   // Callback when reordering occurs
   const handleReorder = async (updatedBooks: UserBook[]) => {
@@ -119,9 +139,9 @@ const TBRListPage: React.FC = () => {
         <div className="mb-4">
           <h3 className="text-lg font-semibold mb-2">Filter by Tag:</h3>
           <div className="flex flex-wrap gap-2">
-            {availableTags.map((tag, index) => {
+            {inlineTags.map((item, index) => {
               const isSelected = filterTags.some(
-                (selected) => selected.toLowerCase() === tag.toLowerCase()
+                t => t.toLowerCase() === item.tag.toLowerCase()
               );
               return (
                 <button
@@ -129,25 +149,33 @@ const TBRListPage: React.FC = () => {
                   onClick={() => {
                     // Toggle the tag on or off:
                     if (isSelected) {
-                      setFilterTags(filterTags.filter((t) => t.toLowerCase() !== tag.toLowerCase()));
+                      setFilterTags(filterTags.filter(t => t.toLowerCase() !== item.tag.toLowerCase()));
                     } else {
-                      setFilterTags([...filterTags, tag]);
+                      setFilterTags([...filterTags, item.tag]);
                     }
                   }}
-                  className={`px-3 py-1 rounded-full border ${
+                  className={`px-2 py-1 rounded-full border ${
                     isSelected
                       ? 'bg-bookAccent text-white'
                       : 'bg-white text-bookBrown border-bookBorder'
                   }`}
                 >
-                  {tag}
+                  {item.tag} ({item.count})
                 </button>
               );
             })}
+            {allAvailableTags.length > inlineTagCount && (
+              <button
+                onClick={() => setShowMoreTagsModal(true)}
+                className="px-2 py-1 rounded-full border bg-white font-semibold text-bookBrown border-bookBorder"
+              >
+                + More Tags
+              </button>
+            )}
             {filterTags.length > 0 && (
               <button
                 onClick={() => setFilterTags([])}
-                className="px-3 py-1 rounded-full border bg-red-500 text-white"
+                className="px-2 py-1 rounded-full border bg-red-500 text-white"
               >
                 Clear Filters
               </button>
@@ -184,6 +212,17 @@ const TBRListPage: React.FC = () => {
             // Also update the local selectedBook state.
             setSelectedBook({ ...selectedBook, userTags: newTags });
           }}
+        />
+      )}
+      {showMoreTagsModal && (
+        <MoreTagsModal
+          availableTags={allAvailableTags}
+          initialSelectedTags={filterTags}
+          onApply={(selected) => {
+            setFilterTags(selected);
+            setShowMoreTagsModal(false);
+          }}
+          onClose={() => setShowMoreTagsModal(false)}
         />
       )}
     </div>
