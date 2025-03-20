@@ -7,8 +7,10 @@ import { BookStatus } from '../enums/status.enum';
 
 const TBRListPage: React.FC = () => {
   const [books, setBooks] = useState<UserBook[]>([]);
+  const [filteredBooks, setFilteredBooks] = useState<UserBook[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedBook, setSelectedBook] = useState<UserBook | null>(null);
+  const [filterTags, setFilterTags] = useState<string[]>([]);
   const token = localStorage.getItem('token') || '';
 
   const fetchBooks = async () => {
@@ -18,6 +20,7 @@ const TBRListPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBooks(res.data);
+      setFilteredBooks(res.data);
     } catch (error) {
       console.error('Error fetching TBR list:', error);
     } finally {
@@ -30,6 +33,36 @@ const TBRListPage: React.FC = () => {
       fetchBooks();
     }
   }, [token]);
+
+  // Update filteredBooks whenever filterTag or books change.
+  useEffect(() => {
+    if (filterTags.length === 0) {
+      setFilteredBooks(books);
+    } else {
+      const filtered = books.filter(book => {
+        // Normalize the book's userTags into lower-case tag names.
+        const bookTagNames = (book.userTags || []).map((ut: any) => {
+          if (typeof ut === 'string') return ut.toLowerCase();
+          return ut.tag?.name?.toLowerCase() || ut.name?.toLowerCase() || '';
+        });
+        // Show the book if it has at least one tag that matches any filter.
+        return filterTags.some(filter => bookTagNames.includes(filter.toLowerCase()));
+      });
+      setFilteredBooks(filtered);
+    }
+  }, [filterTags, books]);
+
+  // Compute available tags for filtering from all books.
+  const availableTagsSet = new Set<string>();
+  books.forEach(book => {
+    (book.userTags || []).forEach((ut: any) => {
+      const tagName = typeof ut === 'string'
+        ? ut
+        : (ut.tag?.name || ut.name || '');
+      if (tagName) availableTagsSet.add(tagName);
+    });
+  });
+  const availableTags = Array.from(availableTagsSet);
 
   // Callback when reordering occurs
   const handleReorder = async (updatedBooks: UserBook[]) => {
@@ -79,13 +112,58 @@ const TBRListPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bookTan flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bookTan flex flex-col items-center p-4">
       <div className="bg-bookBeige text-bookBrown border border-bookBorder shadow-lg rounded-lg p-8 w-full max-w-4xl">
         <h2 className="text-3xl font-bold mb-4 text-center">My TBR List</h2>
+        {/* Filter UI */}
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-2">Filter by Tag:</h3>
+          <div className="flex flex-wrap gap-2">
+            {availableTags.map((tag, index) => {
+              const isSelected = filterTags.some(
+                (selected) => selected.toLowerCase() === tag.toLowerCase()
+              );
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    // Toggle the tag on or off:
+                    if (isSelected) {
+                      setFilterTags(filterTags.filter((t) => t.toLowerCase() !== tag.toLowerCase()));
+                    } else {
+                      setFilterTags([...filterTags, tag]);
+                    }
+                  }}
+                  className={`px-3 py-1 rounded-full border ${
+                    isSelected
+                      ? 'bg-bookAccent text-white'
+                      : 'bg-white text-bookBrown border-bookBorder'
+                  }`}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+            {filterTags.length > 0 && (
+              <button
+                onClick={() => setFilterTags([])}
+                className="px-3 py-1 rounded-full border bg-red-500 text-white"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        </div>
         {loading ? (
           <p>Loading...</p>
         ) : (
-          <BookList books={books} onCardClick={handleCardClick} draggable onReorder={handleReorder} onDelete={handleDelete} />
+          <BookList
+            books={filteredBooks}
+            onCardClick={handleCardClick}
+            draggable
+            onReorder={handleReorder}
+            onDelete={handleDelete}
+          />
         )}
       </div>
       {selectedBook && (
