@@ -23,7 +23,10 @@ export const getBooks = async (req: Request, res: Response): Promise<void> => {
       return;
     }
     const userBooks = await prisma.userBook.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        status: { in: ['to-read', 'reading'] }  
+      },
       include: { 
         book: true,
         userTags: true, // Directly include the tags
