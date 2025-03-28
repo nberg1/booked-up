@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BookmarkIcon, BookOpenIcon, UserIcon } from '@heroicons/react/24/solid';
+import { BookmarkIcon, BookOpenIcon, MagnifyingGlassIcon, UserIcon } from '@heroicons/react/24/solid';
 import ProfilePanel from './ProfilePanel';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,6 +9,7 @@ const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setIsLoggedIn, setUser } = useAuth();
+  const [query, setQuery] = useState('');
 
   // Determine active routes for highlighting icons.
   const isBooksSection = location.pathname.startsWith('/books');
@@ -22,8 +23,17 @@ const Header: React.FC = () => {
     navigate('/login'); // Redirect to sign in page after logout.
   };
 
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (query.trim() !== '') {
+      navigate(`/search?query=${encodeURIComponent(query.trim())}`);
+      setQuery('');
+    }
+  };
+
   return (
-    <header className="responsive-bg p-3">
+    <header className="responsive-bg">
+      <div className="bg-black bg-opacity-35 p-4">
       <div className="flex items-center justify-between">
         {/* Brand */}
         <Link to="/" className="text-2xl font-bold text-bookTan">
@@ -68,6 +78,7 @@ const Header: React.FC = () => {
           )}
         </div>
       </div>
+      </div>
       {isProfileOpen && (
         <ProfilePanel
           onClose={() => setIsProfileOpen(false)}
@@ -75,6 +86,21 @@ const Header: React.FC = () => {
           username={user?.name || null}
         />
       )}
+      {/* Sub-header for Persistent Search */}
+      <div className="bg-bookBeige text-bookBrown p-4 border-t">
+        <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search books..."
+            className="text-bookBrown/80 flex-1 px-3 py-2 border border-bookBorder rounded focus:outline-none focus:ring-2 focus:ring-bookAccent pr-10"
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <MagnifyingGlassIcon className="h-5 w-5 text-bookBrown" />
+          </div>
+        </form>
+      </div>
     </header>
   );
 };
