@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setIsLoggedIn } = useAuth();
+  const { setIsLoggedIn, setUser } = useAuth();
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -27,6 +27,10 @@ const LoginPage: React.FC = () => {
       const { token } = response.data;
       localStorage.setItem('token', token);
       setIsLoggedIn(true);
+      const userResponse = await axios.get('/api/users/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(userResponse.data.user);
       navigate('/');
     } catch (err: any) {
       console.error('Login error:', err);

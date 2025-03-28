@@ -37,7 +37,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     // Sign a JWT token with the new user's id and email
     const token = jwt.sign(
-      { id: newUser.id, email: newUser.email },
+      { id: newUser.id, name: newUser.username, email: newUser.email },
       process.env.JWT_SECRET as string,
       { expiresIn: '1h' }
     );
@@ -73,7 +73,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Sign a JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, name: user.username, email: user.email },
       process.env.JWT_SECRET as string,
       { expiresIn: '1h' }
     );

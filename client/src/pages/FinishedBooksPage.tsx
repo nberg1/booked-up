@@ -83,8 +83,8 @@ const FinishedBooksPage: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen bg-bookTan flex items-center justify-center p-4">
-      <div className="bg-bookBeige text-bookBrown border border-bookBorder shadow-lg rounded-lg p-8 w-full max-w-4xl">
+    <div className="min-h-screen bg-bookTan flex flex-col items-center">
+      <div className="bg-bookBeige text-bookBrown border border-bookBorder p-8 w-full max-w-4xl">
         <h2 className="text-3xl font-bold text-bookBrown mb-4 text-center">Finished Books</h2>
         {loading ? (
             <p className="text-bookBrown">Loading...</p>

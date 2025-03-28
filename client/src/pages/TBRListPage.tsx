@@ -132,9 +132,9 @@ const TBRListPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bookTan flex flex-col items-center p-4">
-      <div className="bg-bookBeige text-bookBrown border border-bookBorder shadow-lg rounded-lg p-8 w-full max-w-4xl">
-        <h2 className="text-3xl font-bold mb-4 text-center">My TBR List</h2>
+    <div className="min-h-screen bg-bookTan flex flex-col items-center">
+      <div className="bg-bookBeige text-bookBrown border border-bookBorder p-8 w-full max-w-4xl">
+        <h2 className="text-3xl font-bold mb-4 text-center">TBR List</h2>
         {/* Filter UI */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold mb-2">Filter by Tag:</h3>
@@ -188,7 +188,7 @@ const TBRListPage: React.FC = () => {
           <BookList
             books={filteredBooks}
             onCardClick={handleCardClick}
-            draggable
+            draggable={filterTags.length === 0} // only allow reordering when no filter is active
             onReorder={handleReorder}
             onDelete={handleDelete}
           />
