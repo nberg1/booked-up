@@ -1,4 +1,5 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from './routes/users';
@@ -9,7 +10,7 @@ import chatgptRoute from './routes/chatgpt';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -18,16 +19,19 @@ app.use('/api/books', bookRoutes);
 app.use('/api/chatgpt', chatgptRoute);
 
 
-// Simple test route
-app.get('/', (req: Request, res: Response) => {
-    res.send('Booked Up Backend Running');
+// Serve static files from the React app's build directory
+const clientBuildPath = path.join(__dirname, '../../client/build');
+app.use(express.static(clientBuildPath));
+
+// Catchall route: for any request that doesn't match an API route,
+// send back the React index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
 
-
-// Only start the server if not in a test environment
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}
+app.listen(port, () => {
+  console.log(`Server is listening on port ${port}`);
+});
 
 // Export the app for testing
 export default app;
