@@ -10,7 +10,8 @@
     "format": "prettier --write .",
     "build": "tsc",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "heroku-postbuild": "npm run build"
+    "migrate": "npx prisma migrate deploy",
+    "heroku-postbuild": "npm run build && npm run migrate"
   },
   "keywords": [],
   "author": "",
