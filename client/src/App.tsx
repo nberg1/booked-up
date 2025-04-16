@@ -7,6 +7,8 @@ import Header from './components/Header';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/AuthContext';
 import BooksSection from './pages/BooksSection';
+// import ShortStoryPage from './pages/ShortStoryPage';
+import HomePage from './pages/HomePage';
 
 const AppContent: React.FC = () => {
   const { isAuthLoading } = useAuth();
@@ -24,7 +26,8 @@ const AppContent: React.FC = () => {
           <Route path="/signup" element={<CreateAccountPage />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/books/*" element={<BooksSection />} />
-          <Route path="/" element={<BooksSection />} />
+          <Route path="/" element={<HomePage />} />
+          {/* <Route path="/short-story" element={<ShortStoryPage/>} /> */}
         </Routes>
       </main>
     </Router>

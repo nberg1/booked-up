@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const CreateAccountPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setIsLoggedIn } = useAuth();
+  const { setIsLoggedIn, setUser } = useAuth();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -36,6 +36,10 @@ const CreateAccountPage: React.FC = () => {
       // Assume response contains a token and user data
       const { token } = response.data;
       localStorage.setItem('token', token);
+      const userResponse = await axios.get('/api/users/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(userResponse.data.user);
       setIsLoggedIn(true);
       navigate('/');      // Optionally, store user data in context or state management
     } catch (err: any) {
