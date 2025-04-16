@@ -332,14 +332,14 @@ export const updateBookOrder = async (req: Request, res: Response): Promise<void
  */
 export const deleteBook = async (req: Request, res: Response): Promise<void> => {
   try {
-    const bookId = parseInt(req.params.id, 10);
+    const userBookId = parseInt(req.params.id, 10);
     const userId = (req as AuthenticatedRequest).user?.id;
     if (!userId) {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
     await prisma.userBook.deleteMany({
-      where: { userId, bookId }
+      where: { id: userBookId }
     });
     res.json({ message: 'Book removed from TBR list' });
   } catch (error: any) {
