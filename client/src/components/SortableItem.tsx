@@ -3,7 +3,6 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import BookCard, { BookCardProps } from './BookCard';
 import '../styles/SortableItem.css';
-import { Book } from '../types/book';
 
 interface SortableItemProps extends BookCardProps {
   id: number; // Unique identifier, e.g. the UserBook id

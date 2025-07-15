@@ -49,7 +49,7 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(
+      await axios.put(
         `/api/books/status/${userBookId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }

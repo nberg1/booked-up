@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import BookList from '../components/BookList';
 import { UserBook } from '../types/book';
@@ -11,7 +11,7 @@ const FinishedBooksPage: React.FC = () => {
   const [selectedBook, setSelectedBook] = useState<UserBook | null>(null);
   const token = localStorage.getItem('token') || '';
 
-  const fetchFinishedBooks = async () => {
+  const fetchFinishedBooks = useCallback(async () => {
     try {
       // Assume /api/books/finished returns books with status "read"
       const res = await axios.get('/api/books/finished', {
@@ -23,13 +23,13 @@ const FinishedBooksPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) {
       fetchFinishedBooks();
     }
-  }, [token]);
+  }, [token, fetchFinishedBooks]);
 
   const handleCardClick = (book: UserBook) => {
     setSelectedBook(book);

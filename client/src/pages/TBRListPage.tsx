@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import BookDetailsModal from '../components/BookDetailsModal';
 import BookList from '../components/BookList';
@@ -26,7 +26,7 @@ const TBRListPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const fetchBooks = async () => {
+  const fetchBooks = useCallback(async () => {
     try {
       // Assume /api/books returns books with status "to-read" or "reading"
       const res = await axios.get('/api/books', {
@@ -39,13 +39,13 @@ const TBRListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) {
       fetchBooks();
     }
-  }, [token]);
+  }, [token, fetchBooks]);
 
   // Update filteredBooks whenever filterTag or books change.
   useEffect(() => {

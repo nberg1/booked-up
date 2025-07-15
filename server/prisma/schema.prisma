@@ -36,6 +36,10 @@ model Book {
 model Tag {
   id    Int     @id @default(autoincrement())
   name  String  @unique
+  // Analytics fields
+  usageCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
   // This relation is for the global book tags
   books     Book[]     @relation("BookTags")
   // This relation is for user-specific tags

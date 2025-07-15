@@ -49,6 +49,7 @@ const TagGenerationModal: React.FC<TagGenerationModalProps> = ({
       }
     };
     fetchTags();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookTitle, bookAuthor, bookDescription]);
 
   const toggleTag = (tag: string) => {

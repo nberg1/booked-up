@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { matchOrCreateTags } from '../services/tagService';
 import { getDefaultPriority } from '../services/prioritizationService';
 
 interface AuthenticatedRequest extends Request {
@@ -118,17 +119,9 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
     }
 
     if (!book) {
-      // If the book does not exist, upsert the global tags.
+      // If the book does not exist, use our tag matching service for global tags
       const tagConnections = globalTags && globalTags.length > 0
-        ? await Promise.all(
-            globalTags.map(async (tagName: string) => {
-              return await prisma.tag.upsert({
-                where: { name: tagName },
-                update: {}, // No update needed if the tag exists
-                create: { name: tagName },
-              });
-            })
-          )
+        ? await matchOrCreateTags(globalTags)
         : [];
 
       // Create the book and connect the global tags.
@@ -144,19 +137,22 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
           },
         },
       });
+
+      // Update tag usage analytics
+      if (tagConnections.length > 0) {
+        await prisma.tag.updateMany({
+          where: { id: { in: tagConnections.map(t => t.id) } },
+          data: { 
+            usageCount: { increment: 1 },
+            lastUsedAt: new Date()
+          }
+        });
+      }
     } else {
       // If the book exists but doesn't have any global tags, and we received globalTags,
       // update the book to add them.
       if ((!book.tags || book.tags.length === 0) && globalTags && globalTags.length > 0) {
-        const tagConnections = await Promise.all(
-          globalTags.map(async (tagName: string) => {
-            return await prisma.tag.upsert({
-              where: { name: tagName },
-              update: {},
-              create: { name: tagName },
-            });
-          })
-        );
+        const tagConnections = await matchOrCreateTags(globalTags);
         await prisma.book.update({
           where: { id: book.id },
           data: {
@@ -171,8 +167,11 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
     const defaultPriority = await getDefaultPriority(userId);
 
     // Create the UserBook record to link the current user with the book.
-    // For user-specific tags, we assume you have a relation (e.g., "userTags")
-    // that stores these selections. We use connectOrCreate to ensure the tag exists.
+    // Use our tag matching service for user tags as well
+    const userTagConnections = userTags && userTags.length > 0
+      ? await matchOrCreateTags(userTags)
+      : [];
+
     const userBook = await prisma.userBook.create({
       data: {
         userId,
@@ -180,16 +179,24 @@ export const createBook = async (req: Request, res: Response): Promise<void> => 
         priority: defaultPriority,
         status: 'to-read',
         userTags: {
-          connectOrCreate: userTags.map((tagName: string) => ({
-            where: { name: tagName },
-            create: { name: tagName },
-          })),
+          connect: userTagConnections.map((tag) => ({ id: tag.id })),
         },
       },
       include: {
         userTags: true,
       },
     });
+
+    // Update tag usage analytics for user tags
+    if (userTagConnections.length > 0) {
+      await prisma.tag.updateMany({
+        where: { id: { in: userTagConnections.map(t => t.id) } },
+        data: { 
+          usageCount: { increment: 1 },
+          lastUsedAt: new Date()
+        }
+      });
+    }
 
     res.status(201).json({ book, userBook });
   } catch (error: any) {
