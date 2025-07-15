@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { searchBooks, GoogleBook } from '../services/googleBooksService';
-import TagGenerationModal from '../components/TagGenerationModal';
+import EnhancedTagGenerationModal from '../components/EnhancedTagGenerationModal';
 
 const SearchResultsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -30,7 +30,7 @@ const SearchResultsPage: React.FC = () => {
   };
 
   // Function to fetch the user's TBR list from the backend
-  const fetchUserTBR = async () => {
+  const fetchUserTBR = useCallback(async () => {
     try {
       const res = await axios.get('/api/books', {
         headers: { Authorization: `Bearer ${token}` },
@@ -39,9 +39,9 @@ const SearchResultsPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching TBR list:', error);
     }
-  };
+  }, [token]);
 
-  const fetchResults = async (page: number) => {
+  const fetchResults = useCallback(async (page: number) => {
     setLoading(true);
     try {
       const startIndex = (page - 1) * maxResults;
@@ -53,43 +53,27 @@ const SearchResultsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, maxResults]);
 
-  useEffect(() => {
-    if (query) {
-      setLoading(true);
-      searchBooks(query)
-        .then((data) => {
-          setResults(data.items || []);
-        })
-        .catch((error) => {
-          console.error('Error searching books:', error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [query]);
 
   useEffect(() => {
     if (token) {
       fetchUserTBR();
     }
-  }, [token]);
+  }, [token, fetchUserTBR]);
 
   useEffect(() => {
     if (query) {
       setCurrentPage(1);
-      fetchResults(1);
     }
   }, [query]);
 
-  // Update page when currentPage changes
+  // Fetch results when query or currentPage changes
   useEffect(() => {
-    if (query) {
+    if (query && currentPage) {
       fetchResults(currentPage);
     }
-  }, [currentPage, query]);
+  }, [currentPage, query, fetchResults]);
 
   const handleAddToTBR = (book: GoogleBook) => {
     setSelectedBookForTags(book);
@@ -210,7 +194,7 @@ const SearchResultsPage: React.FC = () => {
             </button>
           </div>
           {showTagModal && selectedBookForTags && (
-            <TagGenerationModal
+            <EnhancedTagGenerationModal
               bookTitle={selectedBookForTags.volumeInfo.title}
               bookAuthor={selectedBookForTags.volumeInfo.authors?.join(', ') || ""}
               bookDescription={selectedBookForTags.volumeInfo.description}
